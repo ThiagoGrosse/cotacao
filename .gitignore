@@ -1,2 +1,3 @@
 vendor/
 Config/env.php
+web/node_modules
