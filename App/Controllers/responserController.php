@@ -12,15 +12,14 @@ class ResponserController
      * Retorno genérico para requisições
      *
      * @param Response $response
-     * @param string $messageResponse
      * @param integer $idStatus
      * @param string $type
      * @return Response
      */
 
-    public function responseClient(Response $response, string $messageResponse, int $idStatus, string $type): Response
+    public function responseClient(Response $response, $messageResponse, int $idStatus): Response
     {
-        $messageResponse = json_encode(["Type" => $type, "Message" => $messageResponse]);
+        $messageResponse = json_encode($messageResponse);
         $response->getBody()->write($messageResponse);
 
         return $response->withHeader('Content-Type', 'application/json')->withStatus($idStatus);
@@ -54,7 +53,7 @@ class ResponserController
      * @param integer $deadline
      * @return Response
      */
-    public function returnQuotation(Response $response, object $quotation, int $deadline): Response
+    public function returnQuotation($quotation, int $deadline)
     {
 
         if (is_null($quotation->modalidades)) {
@@ -64,13 +63,14 @@ class ResponserController
                 'Protocolo' => $quotation->protocolo
             ];
 
-            $res = new ResponserController;
-            $response = $res->responseQuotation($response, json_encode($result), 400);
-
-            return $response;
+            return $result;
         }
 
-        $valor = $quotation->modalidades[0]->valor;
+        $valor = number_format($quotation->modalidades[0]->valor, 2);
+        $custo = number_format($quotation->modalidades[0]->custo, 2);
+
+
+
 
         if ($valor == 0) {
             $valor = 'Grátis';
@@ -84,12 +84,10 @@ class ResponserController
             'prazoTransit' => $quotation->modalidades[0]->prazoTransit,
             'prazoExpedicao' => $quotation->modalidades[0]->prazoExpedicao,
             'prazoProdutoBseller' => $deadline,
-            'valor' => $valor,
-            'custo' => $quotation->modalidades[0]->custo
+            'valor' => str_replace('.', ',', $valor),
+            'custo' => str_replace('.', ',', $custo)
         ];
 
-        $res = new ResponserController;
-        $response = $res->responseQuotation($response, json_encode($result), 200);
-        return $response;
+        return $result;
     }
 }

@@ -12,4 +12,5 @@ require_once 'Src/moveFiles.php';
 require_once 'Src/shopCartCalculator.php';
 require_once 'Src/convertsMarketplaceToChannel.php';
 require_once 'Src/validateInfo.php';
+require_once 'Src/channelList.php';
 require_once 'Routes/index.php';

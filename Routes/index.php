@@ -55,11 +55,6 @@ $app->group('/api/v1', function () use ($app) {
 })->add(AuthConnection::class . ':validateConnection');
 
 
-$app->post('/teste', function (Request $request, Response $response) {
-    die(json_encode('aqui'));
-});
-
-
 /**
  * Grupo de cotação massiva
  */

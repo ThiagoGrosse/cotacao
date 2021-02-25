@@ -15,7 +15,7 @@ class Core
         $this->url = 'http://layer.estrela10.corecommerce.com.br/v1/Sales/API.svc/web/GetOrderByNumber';
     }
 
-    public function getOrderByCore(string $idPedido): object
+    public function getOrderByCore($idPedido)
     {
         $ch = curl_init($this->url);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");

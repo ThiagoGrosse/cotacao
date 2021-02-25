@@ -7,7 +7,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use App\Util\Excel;
 use App\Util\Fusion;
 
-use function Src\{moveUploadedFile, shopCartCalculator, validateInformation};
+use function Src\{channelList, moveUploadedFile, shopCartCalculator, validateInformation};
 
 class Quotation
 {
@@ -23,7 +23,7 @@ class Quotation
      * @return Response
      */
 
-    public function simpleQuotation(Request $request, Response $response, array $args): Response
+    public function simpleQuotation(Request $request, Response $response): Response
     {
 
         $data = $request->getParsedBody();
@@ -39,7 +39,7 @@ class Quotation
             foreach ($itens as $i) {
 
                 $idItem = $i['id_item'];
-                $qt = $i['quantidade'];
+                $qt = intval($i['quantidade']);
 
                 $p = new ProductsController;
                 $getItems = $p->getItems($idItem);
@@ -71,11 +71,37 @@ class Quotation
 
             $cartValue = shopCartCalculator($shopCart);
 
-            $qFusion = new Fusion;
-            $quotation = $qFusion->quotationSimpleFusion($cep, $channel, $products, $cartValue);
+            $result = [];
 
-            $responseTreatment = new ResponserController;
-            $response = $responseTreatment->returnQuotation($response, $quotation, $deadline);
+            $qFusion = new Fusion;
+            $res = new ResponserController;
+
+            if ($channel == 'todos') {
+
+                $channels = channelList();
+
+                foreach ($channels as $i) {
+
+                    $quotation = $qFusion->fusion($cep, $i, $products, $cartValue);
+
+                    $prepareReturn = $res->returnQuotation($quotation, $deadline);
+                    $prepareReturn['canal'] = $i;
+
+                    $result[] = $prepareReturn;
+                }
+            } else {
+
+                $quotation = $qFusion->fusion($cep, $channel, $products, $cartValue);
+
+                $prepareReturn = $res->returnQuotation($quotation, $deadline);
+                $prepareReturn['canal'] = $channel;
+
+                $result = [
+                    $prepareReturn
+                ];
+            }
+
+            $response = $res->responseClient($response, $result, 200);
 
             return $response;
         } catch (\Exception $e) {
@@ -83,7 +109,7 @@ class Quotation
             $messageResponse = $e->getMessage();
 
             $res = new ResponserController;
-            $response = $res->responseClient($response, $messageResponse, 400, "Error");
+            $response = $res->responseClient($response, $messageResponse, 400);
             return $response;
         }
     }
@@ -103,8 +129,12 @@ class Quotation
         $directory = 'Uploads/';
 
         $uploadedFiles = $request->getUploadedFiles();
+        $uploadedFile = $uploadedFiles['formProdutos'];
 
-        $uploadedFile = $uploadedFiles['example1'];
+        $extension = pathinfo($uploadedFile->getClientFilename(), PATHINFO_EXTENSION);
+
+        die(print_r($extension));
+
         if ($uploadedFile->getError() === UPLOAD_ERR_OK) {
             $filename = moveUploadedFile($directory, $uploadedFile);
 
@@ -127,9 +157,7 @@ class Quotation
                 if (!isset($getItems)) {
 
                     $res = new ResponserController;
-                    $response = $res->responseClient($response, 'Produto não encontrado na base', 404, "Error");
-
-                    return $response;
+                    $res->responseClient($response, 'Produto não encontrado na base', 400, "Error");
                 }
 
                 $price = floatval($getItems['price']);
@@ -155,7 +183,7 @@ class Quotation
                 $cartValue = shopCartCalculator($shopCart);
 
                 $qFusion = new Fusion;
-                $quotation = $qFusion->quotationSimpleFusion($cep, $channel, $products, $cartValue);
+                $quotation = $qFusion->fusion($cep, $channel, $products, $cartValue);
 
                 $resultQuotation[] = [
                     'protocolo' => $quotation->protocolo,
@@ -174,7 +202,7 @@ class Quotation
             $excel->writePlanProducts($uploadfile, $resultQuotation);
 
             $res = new ResponserController;
-            $response = $res->responseClient($response, $uploadfile, 200, "Success");
+            $response = $res->responseClient($response, $uploadfile, 200);
         }
 
         return $response;
@@ -195,59 +223,70 @@ class Quotation
 
         $res = null;
 
-        $cep = $data['cep'] ?? $res = validateInformation($response, 'cep');
-        $channel = $data['canal'] ?? $res = validateInformation($response, 'canal');
-        $warehouse = $data['deposito'] ?? $res = validateInformation($response, 'deposito');
-        $height = $data['altura'] ?? $res = validateInformation($response, 'altura');
-        $length = $data['comprimento'] ?? $res = validateInformation($response, 'comprimento');
-        $width = $data['largura'] ?? $res = validateInformation($response, 'largura');
-        $weight = $data['peso'] ?? $res = validateInformation($response, 'peso');
-        $price = $data['vlrProduto'] ?? $res = validateInformation($response, 'valor do produto');
-        $qt = $data['quantidade'] ?? 1;
-        $deadline = 0;
+        try {
 
-        if (!is_null($res)) {
+            $cep = $data['cep'] ?? $res = validateInformation($response, 'cep');
+            $channel = $data['canal'] ?? $res = validateInformation($response, 'canal');
+            $warehouse = $data['deposito'] ?? $res = validateInformation($response, 'deposito');
+            $height = $data['altura'] ?? $res = validateInformation($response, 'altura');
+            $length = $data['comprimento'] ?? $res = validateInformation($response, 'comprimento');
+            $width = $data['largura'] ?? $res = validateInformation($response, 'largura');
+            $weight = $data['peso'] ?? $res = validateInformation($response, 'peso');
+            $price = $data['vlrProduto'] ?? $res = validateInformation($response, 'valor do produto');
+            $qt = $data['quantidade'] ?? 1;
+            $deadline = 0;
 
-            return $response->withHeader('Content-Type', 'application/json');
+            if (!is_null($res)) {
+
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+
+            if ($warehouse == 'sp') {
+
+                $sku = 'item-teste-sp';
+            } elseif ($warehouse == 'sc') {
+
+                $sku = 'item-teste-sc';
+            } elseif ($warehouse == 'sc_sp') {
+
+                $sku = 'item-teste';
+            }
+
+            $shopCart = [
+                [
+                    'price' => floatval($price),
+                    'qt' => $qt
+                ]
+            ];
+
+            $products[] = [
+                "cdItem" => $sku,
+                "sku" => $sku,
+                "qtdItem" => $qt,
+                "vlrItem" => floatval($price),
+                "comprimento" => $length,
+                "largura" => $width,
+                "altura" => $height,
+                "peso" => $weight
+            ];
+
+            $cartValue = shopCartCalculator($shopCart); // === função que calcula valor do carrinho
+
+            $qFusion = new Fusion;
+            $quotation = $qFusion->fusion($cep, $channel, $products, $cartValue);
+
+            $responseTreatment = new ResponserController;
+            $res = $responseTreatment->returnQuotation($quotation, $deadline);
+            $response = $responseTreatment->responseClient($response, $res, 200);
+
+            return $response;
+        } catch (\Exception $e) {
+
+            $messageResponse = $e->getMessage();
+
+            $res = new ResponserController;
+            $response = $res->responseClient($response, $messageResponse, 400);
+            return $response;
         }
-
-        if ($warehouse == 'sp') {
-
-            $sku = 'item-teste-sp';
-        } elseif ($warehouse == 'sc') {
-
-            $sku = 'item-teste-sc';
-        } elseif ($warehouse == 'sc_sp') {
-
-            $sku = 'item-teste';
-        }
-
-        $shopCart = [
-            [
-                'price' => floatval($price),
-                'qt' => $qt
-            ]
-        ];
-
-        $products[] = [
-            "cdItem" => $sku,
-            "sku" => $sku,
-            "qtdItem" => $qt,
-            "vlrItem" => floatval($price),
-            "comprimento" => $length,
-            "largura" => $width,
-            "altura" => $height,
-            "peso" => $weight
-        ];
-
-        $cartValue = shopCartCalculator($shopCart); // === função que calcula valor do carrinho
-
-        $qFusion = new Fusion;
-        $quotation = $qFusion->quotationSimpleFusion($cep, $channel, $products, $cartValue);
-
-        $responseTreatment = new ResponserController;
-        $response = $responseTreatment->returnQuotation($response, $quotation, $deadline);
-
-        return $response;
     }
 }

@@ -3,7 +3,6 @@
 namespace App\Controllers;
 
 use App\Util\Core;
-use App\Util\E10Bi;
 use App\Util\Excel;
 use App\Util\Fusion;
 
@@ -31,9 +30,6 @@ class OrderQuotation
         $uploadedFiles = $request->getUploadedFiles();
         $uploadedFile = $uploadedFiles['formPedidos'];
 
-        die(print_r($uploadedFile));
-
-
         if ($uploadedFile->getError() === UPLOAD_ERR_OK) {
 
             // === Move arquivo da pasta tmp para a pasta uploads
@@ -51,6 +47,14 @@ class OrderQuotation
                 // === Chama class Core e faz consulta dos pedidos na api do CORE
                 $core = new Core;
                 $data = $core->getOrderByCore($idPedido);
+
+                if (empty($data->DeliveryPostalCode)) {
+                    $res = new ResponserController;
+                    $response = $res->responseClient($response, 'Não foi possível acessar api do CORE', 404, 'Error');
+
+                    return $response;
+                }
+
                 $cep = $data->DeliveryPostalCode;
 
                 $channelOriginOrder = $data->MarketPlaceBrand;
@@ -59,7 +63,7 @@ class OrderQuotation
                 if ($channel == 'Error') {
 
                     $res = new ResponserController;
-                    $response = $res->responseClient($response, "Canal não encontrado", 200, "Error");;
+                    $response = $res->responseClient($response, "Canal não encontrado", 400, "Error");;
 
                     return $response;
                 }
@@ -108,7 +112,7 @@ class OrderQuotation
             $excel->writePlanOrders($uploadfile, $resultQuotation);;
 
             $res = new ResponserController;
-            $response = $res->responseClient($response, $uploadfile, 200, "Success");
+            $response = $res->responseClient($response, $uploadfile, 200);
         }
         return $response;
     }
