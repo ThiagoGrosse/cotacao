@@ -2,13 +2,14 @@
 
 namespace App\Controllers;
 
-use App\Models\Products;
-
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
+use App\Models\Products;
+
 class Downloads
 {
+
 
     /**
      * Função que atualiza preço dos produtos no banco de dados
@@ -17,7 +18,6 @@ class Downloads
      * @param Response $response
      * @return Response
      */
-
     public function downloadPrice(Request $request, Response $response): Response
     {
 
@@ -78,7 +78,7 @@ class Downloads
 
 
                     /**
-                     * Cadastro produto no banco de dados
+                     * Cadastra produto no banco de dados
                      */
 
                     Products::create(['id_item' => $idItem, 'price' => $finalPrice]);
@@ -96,15 +96,24 @@ class Downloads
                 }
             } catch (\Exception $e) {
 
+                $msg = $e->getMessage();
+
                 $res = new ResponserController;
-                $response = $res->responseClient($response, "Falhou, tente novamente", 400, "Error");
+                $response = $res->responseClient($response, $msg, 200);
 
                 return $response;
             }
         }
 
+        $msg = [
+            'type' => 'Success',
+            'timeThatWasCompleted' => date("H:i:s"),
+            'data' => $result
+        ];
+
         $res = new ResponserController;
-        $response = $res->responseClient($response, "Processo concluído", 200, "Success");
+
+        $response = $res->responseClient($response, json_encode($msg), 200);
 
         return $response;
     }

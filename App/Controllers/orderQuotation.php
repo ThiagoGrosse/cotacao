@@ -9,7 +9,7 @@ use App\Util\Fusion;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
-use function Src\{deParaChannel, moveUploadedFile, shopCartCalculator};
+use function Src\{deParaChannel, moveUploadedFile, removerArquivosAntigos, shopCartCalculator};
 
 class OrderQuotation
 {
@@ -25,10 +25,13 @@ class OrderQuotation
 
     public function orderListQuote(Request $request, Response $response): Response
     {
+        removerArquivosAntigos();
 
         $directory = 'Uploads/';
         $uploadedFiles = $request->getUploadedFiles();
         $uploadedFile = $uploadedFiles['formPedidos'];
+
+        $resultQuotation = [];
 
         if ($uploadedFile->getError() === UPLOAD_ERR_OK) {
 
@@ -49,10 +52,21 @@ class OrderQuotation
                 $data = $core->getOrderByCore($idPedido);
 
                 if (empty($data->DeliveryPostalCode)) {
-                    $res = new ResponserController;
-                    $response = $res->responseClient($response, 'Não foi possível acessar api do CORE', 404, 'Error');
 
-                    return $response;
+                    $resultQuotation[] = [
+                        'protocolo' => '',
+                        'cdMicroServico' => '',
+                        'nomeTransportadora' => '',
+                        'prazo' => '',
+                        'prazoTransit' => '',
+                        'prazoExpedicao' => '',
+                        'prazoProdutoBseller' => '',
+                        'valor' => '',
+                        'custo' => '',
+                        'erro' => 'Não foi possível obter dados do pedido'
+                    ];
+
+                    continue;
                 }
 
                 $cep = $data->DeliveryPostalCode;
@@ -93,7 +107,7 @@ class OrderQuotation
                 $cartValue = shopCartCalculator($shopCart);
 
                 $qFusion = new Fusion;
-                $quotation = $qFusion->quotationSimpleFusion($cep, $channel, $products, $cartValue);
+                $quotation = $qFusion->fusion($cep, $channel, $products, $cartValue);
 
                 $resultQuotation[] = [
                     'protocolo' => $quotation->protocolo ?? null,
@@ -102,7 +116,6 @@ class OrderQuotation
                     'prazo' => $quotation->modalidades[0]->prazo ?? null,
                     'prazoTransit' => $quotation->modalidades[0]->prazoTransit ?? null,
                     'prazoExpedicao' => $quotation->modalidades[0]->prazoExpedicao ?? null,
-                    'prazoProdutoBseller' => $deadline ?? null,
                     'valor' => $quotation->modalidades[0]->valor ?? null,
                     'custo' => $quotation->modalidades[0]->custo ?? null,
                     'erro' => $quotation->msg ?? null
@@ -111,8 +124,10 @@ class OrderQuotation
 
             $excel->writePlanOrders($uploadfile, $resultQuotation);;
 
+            $file = explode("/", $uploadfile);
+
             $res = new ResponserController;
-            $response = $res->responseClient($response, $uploadfile, 200);
+            $response = $res->responseClient($response, $file[1], 200);
         }
         return $response;
     }

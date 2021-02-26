@@ -35,13 +35,12 @@ class Excel
 
         for ($i = 2; $i <= $highestRow; $i++) {
 
-            $channel = $this->spreadsheet->getActiveSheet()->getCellByColumnAndRow(1, $i)->getValue();
-            $idItem = $this->spreadsheet->getActiveSheet()->getCellByColumnAndRow(2, $i)->getValue();
-            $cep = $this->spreadsheet->getActiveSheet()->getCellByColumnAndRow(3, $i)->getValue();
-            $qt = $this->spreadsheet->getActiveSheet()->getCellByColumnAndRow(4, $i)->getValue();
+            $idItem = $this->spreadsheet->getActiveSheet()->getCellByColumnAndRow(1, $i)->getValue();
+            $cep = $this->spreadsheet->getActiveSheet()->getCellByColumnAndRow(2, $i)->getValue();
+            $qt = $this->spreadsheet->getActiveSheet()->getCellByColumnAndRow(3, $i)->getValue();
 
             $productsQuotation[] = [
-                'channel' => $channel,
+                'channel' => 'Estrela 10',
                 'idItem' => $idItem,
                 'cep' => $cep,
                 'qt' => $qt
@@ -86,16 +85,16 @@ class Excel
 
             $linha = $i + 2;
 
-            $Writer = $this->spreadsheet->getActiveSheet()->setCellValueByColumnAndRow(5, $linha, $resultQuotation[$i]['protocolo']);
-            $Writer = $this->spreadsheet->getActiveSheet()->setCellValueByColumnAndRow(6, $linha, $resultQuotation[$i]['cdMicroServico']);
-            $Writer = $this->spreadsheet->getActiveSheet()->setCellValueByColumnAndRow(7, $linha, $resultQuotation[$i]['nomeTransportadora']);
-            $Writer = $this->spreadsheet->getActiveSheet()->setCellValueByColumnAndRow(8, $linha, $resultQuotation[$i]['prazo']);
-            $Writer = $this->spreadsheet->getActiveSheet()->setCellValueByColumnAndRow(9, $linha, $resultQuotation[$i]['prazoTransit']);
-            $Writer = $this->spreadsheet->getActiveSheet()->setCellValueByColumnAndRow(10, $linha, $resultQuotation[$i]['prazoExpedicao']);
-            $Writer = $this->spreadsheet->getActiveSheet()->setCellValueByColumnAndRow(11, $linha, $resultQuotation[$i]['prazoProdutoBseller']);
-            $Writer = $this->spreadsheet->getActiveSheet()->setCellValueByColumnAndRow(12, $linha, $resultQuotation[$i]['valor']);
-            $Writer = $this->spreadsheet->getActiveSheet()->setCellValueByColumnAndRow(13, $linha, $resultQuotation[$i]['custo']);
-            $Writer = $this->spreadsheet->getActiveSheet()->setCellValueByColumnAndRow(14, $linha, $resultQuotation[$i]['erro']);
+            $Writer = $this->spreadsheet->getActiveSheet()->setCellValueByColumnAndRow(4, $linha, $resultQuotation[$i]['protocolo']);
+            $Writer = $this->spreadsheet->getActiveSheet()->setCellValueByColumnAndRow(5, $linha, $resultQuotation[$i]['cdMicroServico']);
+            $Writer = $this->spreadsheet->getActiveSheet()->setCellValueByColumnAndRow(6, $linha, $resultQuotation[$i]['nomeTransportadora']);
+            $Writer = $this->spreadsheet->getActiveSheet()->setCellValueByColumnAndRow(7, $linha, $resultQuotation[$i]['prazo']);
+            $Writer = $this->spreadsheet->getActiveSheet()->setCellValueByColumnAndRow(8, $linha, $resultQuotation[$i]['prazoTransit']);
+            $Writer = $this->spreadsheet->getActiveSheet()->setCellValueByColumnAndRow(9, $linha, $resultQuotation[$i]['prazoExpedicao']);
+            $Writer = $this->spreadsheet->getActiveSheet()->setCellValueByColumnAndRow(10, $linha, $resultQuotation[$i]['prazoProdutoBseller']);
+            $Writer = $this->spreadsheet->getActiveSheet()->setCellValueByColumnAndRow(11, $linha, $resultQuotation[$i]['valor']);
+            $Writer = $this->spreadsheet->getActiveSheet()->setCellValueByColumnAndRow(12, $linha, $resultQuotation[$i]['custo']);
+            $Writer = $this->spreadsheet->getActiveSheet()->setCellValueByColumnAndRow(13, $linha, $resultQuotation[$i]['erro']);
         }
 
         $writer->save($uploadfile);
@@ -115,10 +114,9 @@ class Excel
             $Writer = $this->spreadsheet->getActiveSheet()->setCellValueByColumnAndRow(5, $linha, $resultQuotation[$i]['prazo']);
             $Writer = $this->spreadsheet->getActiveSheet()->setCellValueByColumnAndRow(6, $linha, $resultQuotation[$i]['prazoTransit']);
             $Writer = $this->spreadsheet->getActiveSheet()->setCellValueByColumnAndRow(7, $linha, $resultQuotation[$i]['prazoExpedicao']);
-            $Writer = $this->spreadsheet->getActiveSheet()->setCellValueByColumnAndRow(8, $linha, $resultQuotation[$i]['prazoProdutoBseller']);
-            $Writer = $this->spreadsheet->getActiveSheet()->setCellValueByColumnAndRow(9, $linha, $resultQuotation[$i]['valor']);
-            $Writer = $this->spreadsheet->getActiveSheet()->setCellValueByColumnAndRow(10, $linha, $resultQuotation[$i]['custo']);
-            $Writer = $this->spreadsheet->getActiveSheet()->setCellValueByColumnAndRow(11, $linha, $resultQuotation[$i]['erro']);
+            $Writer = $this->spreadsheet->getActiveSheet()->setCellValueByColumnAndRow(8, $linha, $resultQuotation[$i]['valor']);
+            $Writer = $this->spreadsheet->getActiveSheet()->setCellValueByColumnAndRow(9, $linha, $resultQuotation[$i]['custo']);
+            $Writer = $this->spreadsheet->getActiveSheet()->setCellValueByColumnAndRow(10, $linha, $resultQuotation[$i]['erro']);
         }
 
         $writer->save($uploadfile);

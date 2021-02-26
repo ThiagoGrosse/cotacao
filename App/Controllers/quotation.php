@@ -7,7 +7,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use App\Util\Excel;
 use App\Util\Fusion;
 
-use function Src\{channelList, moveUploadedFile, shopCartCalculator, validateInformation};
+use function Src\{channelList, moveUploadedFile, removerArquivosAntigos, shopCartCalculator, validateInformation};
 
 class Quotation
 {
@@ -126,14 +126,15 @@ class Quotation
 
     public function massiveQuotation(Request $request, Response $response): Response
     {
+
+        removerArquivosAntigos();
+
         $directory = 'Uploads/';
 
         $uploadedFiles = $request->getUploadedFiles();
         $uploadedFile = $uploadedFiles['formProdutos'];
 
         $extension = pathinfo($uploadedFile->getClientFilename(), PATHINFO_EXTENSION);
-
-        die(print_r($extension));
 
         if ($uploadedFile->getError() === UPLOAD_ERR_OK) {
             $filename = moveUploadedFile($directory, $uploadedFile);
@@ -201,8 +202,10 @@ class Quotation
 
             $excel->writePlanProducts($uploadfile, $resultQuotation);
 
+            $file = explode('/', $uploadfile);
+
             $res = new ResponserController;
-            $response = $res->responseClient($response, $uploadfile, 200);
+            $response = $res->responseClient($response, $file[1], 200);
         }
 
         return $response;
