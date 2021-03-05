@@ -7,9 +7,6 @@ use App\Controllers\Quotation;
 use App\Controllers\ShippingCompanyController;
 use App\Middlewares\AuthConnection;
 
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
-
 use function src\slimConfiguration;
 
 $app = new \Slim\App(slimConfiguration());

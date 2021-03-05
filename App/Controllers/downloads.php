@@ -2,9 +2,6 @@
 
 namespace App\Controllers;
 
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
-
 use App\Models\Products;
 
 class Downloads
@@ -13,12 +10,8 @@ class Downloads
 
     /**
      * Função que atualiza preço dos produtos no banco de dados
-     *
-     * @param Request $request
-     * @param Response $response
-     * @return Response
      */
-    public function downloadPrice(Request $request, Response $response): Response
+    public function downloadPrice()
     {
 
         $getDados = [];
@@ -38,10 +31,12 @@ class Downloads
             }
         }
 
+        $var = 0;
         $result = [];
 
         foreach ($getDados as $i) {
 
+            $var++;
 
             /**
              * Coleta os dados
@@ -51,6 +46,8 @@ class Downloads
             $priceDe = str_replace(',', '.', $i['preco_de']);
             $pricePor = str_replace(',', '.', $i['preco_por']);
 
+            $totalRegistros = count($getDados);
+            echo 'Processando ' . $var . ' de ' . $totalRegistros;
 
             /**
              * Converte os valores
@@ -83,11 +80,15 @@ class Downloads
 
                     Products::create(['id_item' => $idItem, 'price' => $finalPrice]);
 
+                    echo ' cadastrado' . PHP_EOL;
+
                     $result[] = [
                         'id_item' => $idItem,
                         'msg' => 'Produto cadastrado'
                     ];
                 } else {
+
+                    echo ' atualizado' . PHP_EOL;
 
                     $result[] = [
                         'id_item' => $idItem,
@@ -98,8 +99,7 @@ class Downloads
 
                 $msg = $e->getMessage();
 
-                $res = new ResponserController;
-                $response = $res->responseClient($response, $msg, 200);
+                $response = json_encode($msg);
 
                 return $response;
             }
@@ -111,9 +111,7 @@ class Downloads
             'data' => $result
         ];
 
-        $res = new ResponserController;
-
-        $response = $res->responseClient($response, json_encode($msg), 200);
+        $response = json_encode($msg);
 
         return $response;
     }
@@ -128,7 +126,7 @@ class Downloads
      * @return Response
      */
 
-    public function downloadDeadline(Request $request, Response $response): Response
+    public function downloadDeadline()
     {
 
         $getDados = [];
@@ -149,9 +147,11 @@ class Downloads
         }
 
         $result = [];
+        $var = 0;
 
         foreach ($getDados as $i) {
 
+            $var++;
 
             /**
              * Coleta os dados
@@ -159,10 +159,11 @@ class Downloads
 
             $idItem = $i['id_item'];
             $deadline = intval($i['tempo_reposicao']);
-            $items[] = [
-                'id' => $idItem,
-                'prazo' => $deadline
-            ];
+
+
+            $totalRegistros = count($getDados);
+            echo 'Processando ' . $var . ' de ' . $totalRegistros;
+
 
             try {
 
@@ -181,11 +182,15 @@ class Downloads
 
                     Products::create(['id_item' => $idItem, 'deadline' => $deadline]);
 
+                    echo ' cadastrado' . PHP_EOL;
+
                     $result[] = [
                         'id_item' => $idItem,
                         'msg' => 'Produto cadastrado'
                     ];
                 } else {
+
+                    echo ' atualizado' . PHP_EOL;
 
                     $result[] = [
                         'id_item' => $idItem,
@@ -194,15 +199,13 @@ class Downloads
                 }
             } catch (\Exception $e) {
 
-                $res = new ResponserController;
-                $response = $res->responseClient($response, $e->getMessage(), 400, "Error");
+                $response = json_encode($e->getMessage());
 
                 return $response;
             }
         }
 
-        $res = new ResponserController;
-        $response = $res->responseClient($response, json_encode($result), 200, "Success");
+        $response = json_encode($result);
 
         return $response;
     }
@@ -217,7 +220,7 @@ class Downloads
      * @return Response
      */
 
-    public function downloadSku(Request $request, Response $response): Response
+    public function downloadSku()
     {
 
         $getDados = [];
@@ -228,18 +231,22 @@ class Downloads
         $handle = fopen('https://e360.estrela10.com.br/produtos/core/export', 'r');
         while (($data = fgetcsv($handle, 0, ';')) !== FALSE) {
 
-            if ($data[0] != 'ID Bseller' && $data[0] != '' && $data[10] == '6') {
+            if ($data[0] != 'ID Bseller' && $data[0] != '' && $data[10] == '6' && $data[6] == 1 && $data[7] == 1) {
                 $getDados[] = [
                     'id_item' => $data[0],
-                    'sku_core' => $data[5]
+                    'sku_core' => $data[5],
                 ];
             }
         }
 
+
         $result = [];
+        $var = 0;
+
 
         foreach ($getDados as $i) {
 
+            $var++;
 
             /**
              * Coleta os dados
@@ -249,13 +256,21 @@ class Downloads
             $sku = $i['sku_core'];
 
 
+
+            $totalRegistros = count($getDados);
+            echo 'Processando ' . $var . ' de ' . $totalRegistros;
+
+
+
             /**
              * busca produto no banco de dados
              */
 
             $getProductDb = Products::where('id_item', '=', $idItem)->first();
 
+
             if (empty($getProductDb)) { // === Se não encontrar o produto
+
 
                 $result[] = [
                     'id_item' => $idItem,
@@ -263,17 +278,25 @@ class Downloads
                 ];
             } else { // === Se encontrar o produto
 
+
                 if ($getProductDb['sku_core'] != $sku) { // === Se o sku da planilha for diferente do sku que tem no banco
+
 
                     $updateSku = Products::where('id_item', '=', $idItem)->update(['sku_core' => $sku]); // === Atualiza sku no banco de dados
 
                     if ($updateSku != 0) { // === Se retornar diferente de falso ( true )
+
+
+                        echo ' atualizado' . PHP_EOL;
 
                         $result[] = [
                             'id_item' => $idItem,
                             'msg' => 'Sku do produto foi atualizado'
                         ];
                     } else { // === Se retornar false
+
+
+                        echo ' erro ao atualizar sku' . PHP_EOL;
 
                         $result[] = [
                             'id_item' => $idItem,
@@ -288,8 +311,7 @@ class Downloads
         /**
          * Retorna resultado geral
          */
-        $response = $response->withHeader('Content-Type', 'application/json')->withStatus(200);
-        $response->getBody()->write(json_encode($result));
+        $response = json_encode($result);
 
         return $response;
     }

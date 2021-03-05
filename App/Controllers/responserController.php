@@ -64,30 +64,36 @@ class ResponserController
             ];
 
             return $result;
+        } elseif ($quotation->modalidades) {
+
+            $valor = number_format($quotation->modalidades[0]->valor, 2);
+            $custo = number_format($quotation->modalidades[0]->custo, 2);
+
+            if ($valor == 0) {
+                $valor = 'Grátis';
+            }
+
+            $result = [
+                'protocolo' => $quotation->protocolo,
+                'cdMicroServico' => $quotation->modalidades[0]->itens[0]->cdMicroServico,
+                'nomeTransportadora' => $quotation->modalidades[0]->transportador,
+                'prazo' => $quotation->modalidades[0]->prazo,
+                'prazoTransit' => $quotation->modalidades[0]->prazoTransit,
+                'prazoExpedicao' => $quotation->modalidades[0]->prazoExpedicao,
+                'prazoProdutoBseller' => $deadline,
+                'valor' => str_replace('.', ',', $valor),
+                'custo' => str_replace('.', ',', $custo)
+            ];
+
+            return $result;
+        } else {
+
+            $result = [
+                'Type' => 'Error',
+                'Message' => 'Erro ao efetuar cotação'
+            ];
+
+            return $result;
         }
-
-        $valor = number_format($quotation->modalidades[0]->valor, 2);
-        $custo = number_format($quotation->modalidades[0]->custo, 2);
-
-
-
-
-        if ($valor == 0) {
-            $valor = 'Grátis';
-        }
-
-        $result = [
-            'protocolo' => $quotation->protocolo,
-            'cdMicroServico' => $quotation->modalidades[0]->itens[0]->cdMicroServico,
-            'nomeTransportadora' => $quotation->modalidades[0]->transportador,
-            'prazo' => $quotation->modalidades[0]->prazo,
-            'prazoTransit' => $quotation->modalidades[0]->prazoTransit,
-            'prazoExpedicao' => $quotation->modalidades[0]->prazoExpedicao,
-            'prazoProdutoBseller' => $deadline,
-            'valor' => str_replace('.', ',', $valor),
-            'custo' => str_replace('.', ',', $custo)
-        ];
-
-        return $result;
     }
 }

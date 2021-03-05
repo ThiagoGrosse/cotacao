@@ -85,6 +85,14 @@ class Quotation
                     $quotation = $qFusion->fusion($cep, $i, $products, $cartValue);
 
                     $prepareReturn = $res->returnQuotation($quotation, $deadline);
+
+                    if (!empty($prepareReturn['Type'])) {
+
+                        $response = $res->responseClient($response, $prepareReturn['Message'], 400);
+
+                        return $response;
+                    }
+
                     $prepareReturn['canal'] = $i;
 
                     $result[] = $prepareReturn;
@@ -95,6 +103,13 @@ class Quotation
 
                 $prepareReturn = $res->returnQuotation($quotation, $deadline);
                 $prepareReturn['canal'] = $channel;
+
+                if (!empty($prepareReturn['Type'])) {
+
+                    $response = $res->responseClient($response, $prepareReturn['Message'], 400);
+
+                    return $response;
+                }
 
                 $result = [
                     $prepareReturn
@@ -148,7 +163,7 @@ class Quotation
 
             foreach ($productForQuotation as $i) {
 
-                $qt = $i['qt'];
+                $qt = intval($i['qt']);
                 $cep = $i['cep'];
                 $channel = $i['channel'];
 
@@ -187,7 +202,7 @@ class Quotation
                 $quotation = $qFusion->fusion($cep, $channel, $products, $cartValue);
 
                 $resultQuotation[] = [
-                    'protocolo' => $quotation->protocolo,
+                    'protocolo' => $quotation->protocolo ?? null,
                     'cdMicroServico' => $quotation->modalidades[0]->itens[0]->cdMicroServico ?? null,
                     'nomeTransportadora' => $quotation->modalidades[0]->transportador ?? null,
                     'prazo' => $quotation->modalidades[0]->prazo ?? null,
@@ -280,6 +295,14 @@ class Quotation
 
             $responseTreatment = new ResponserController;
             $res = $responseTreatment->returnQuotation($quotation, $deadline);
+
+            if ($res['Type'] == 'Error') {
+
+                $response = $responseTreatment->responseClient($response, $res['Message'], 400);
+
+                return $response;
+            }
+
             $response = $responseTreatment->responseClient($response, $res, 200);
 
             return $response;
