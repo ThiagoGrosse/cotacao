@@ -1,0 +1,22 @@
+.tableTransp {
+    text-align: center;
+    font-size: 0.8rem;
+    width: 100%;
+}
+
+.tableTransp th {
+    background-color: #000000;
+    color: #fff;
+}
+
+.tableTransp td {
+    background-color: #DCDCDC;
+}
+
+.tableTransp tr {
+    border-bottom: 1px solid #FFF;
+}
+
+.tableTransp th, td {
+    padding: 0.8rem;
+}
