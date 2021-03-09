@@ -17,18 +17,18 @@ ini_set('memory_limit', '1024M');
 
 $downloads = new Downloads;
 
-$inicio = date('H:i:s') . ' Inicio download preços';
-echo $inicio . PHP_EOL;
+// $inicio = date('H:i:s') . ' Inicio download preços';
+// echo $inicio . PHP_EOL;
 
-$downloads->downloadPrice();
+// $downloads->downloadPrice();
 
-$inicio = date('H:i:s') . ' Inicio download prazos';
-echo $inicio . PHP_EOL;
+// $inicio = date('H:i:s') . ' Inicio download prazos';
+// echo $inicio . PHP_EOL;
 
-$downloads->downloadDeadline();
+// $downloads->downloadDeadline();
 
-$inicio = date('H:i:s') . ' Inicio download skus';
-echo $inicio . PHP_EOL;
+// $inicio = date('H:i:s') . ' Inicio download skus';
+// echo $inicio . PHP_EOL;
 
 $skus = $downloads->downloadSku();
 

@@ -77,7 +77,7 @@ class OrderQuotation
                 if ($channel == 'Error') {
 
                     $res = new ResponserController;
-                    $response = $res->responseClient($response, "Canal não encontrado", 400, "Error");;
+                    $response = $res->responseClient($response, $channelOriginOrder, 400, "Error");;
 
                     return $response;
                 }

@@ -7,7 +7,7 @@ class Fusion
 
     protected $token;
     protected $postToken;
-    public $url;
+
 
     /**
      * Dados para cotação no Fusion
@@ -17,7 +17,6 @@ class Fusion
     {
         $this->token = getenv('TOKEN_FUSION_COTACAO');
         $this->postmanToken = getenv('TOKEN_FUSION_POSTMAN');
-        $this->url = 'https://menufrete.uxsolutions.com.br/api/menuFrete/obter';
     }
 
 
@@ -39,7 +38,7 @@ class Fusion
 
         $json = json_encode($data);
 
-        $ch = curl_init($this->url);
+        $ch = curl_init('https://menufrete.uxsolutions.com.br/api/menuFrete/obter');
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
         curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
