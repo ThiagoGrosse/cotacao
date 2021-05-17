@@ -4,7 +4,7 @@ html, body {
 }
 
 form {
-    width: 90%;
+    width: 98%;
 }
 
 p {
@@ -58,6 +58,7 @@ pre {
 }
 
 .tela-resultado {
+    margin: 3rem;
     width: 90%;
     font-size: 0.9rem;
     min-height: 10rem;
@@ -111,4 +112,8 @@ pre {
 
 .container-header img {
     margin: 2rem 0 2rem auto;
+}
+
+.input-sim-prod {
+    font-size: 0.8rem;
 }

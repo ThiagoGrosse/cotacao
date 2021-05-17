@@ -78,7 +78,7 @@ export default function SimulaProduto() {
                             <input 
                                 type="text" 
                                 name="cep" 
-                                className="form-control"
+                                className="form-control input-sim-prod"
                                 value={cep}
                                 onChange={(e) => {setCep(cpMask(e.target.value))}} 
                                 required
@@ -93,8 +93,8 @@ export default function SimulaProduto() {
                             <input 
                                 type="text"
                                 name="altura"
-                                className="form-control"
-                                placeholder="Altura"
+                                className="form-control input-sim-prod"
+                                placeholder="Altura (cm)"
                                 value={altura}
                                 onChange={(e) => {setAltura(e.target.value)}}
                                 required
@@ -104,8 +104,8 @@ export default function SimulaProduto() {
                             <input
                                 type="text"
                                 name="largura"
-                                className="form-control"
-                                placeholder="Largura"
+                                className="form-control input-sim-prod"
+                                placeholder="Largura (cm)"
                                 value={largura}
                                 onChange={(e) => {setLargura(e.target.value)}}
                                 required
@@ -115,8 +115,8 @@ export default function SimulaProduto() {
                             <input 
                                 type="text"
                                 name="comprimento"
-                                className="form-control"
-                                placeholder="Compr."
+                                className="form-control input-sim-prod"
+                                placeholder="Compr. (cm)"
                                 value={comp}
                                 onChange={(e) => {setComp(e.target.value)}}
                                 required
@@ -126,8 +126,8 @@ export default function SimulaProduto() {
                             <input
                                 type="text"
                                 name="peso"
-                                className="form-control"
-                                placeholder="Peso"
+                                className="form-control input-sim-prod"
+                                placeholder="Peso (kg)"
                                 value={peso}
                                 onChange={(e) => {setPeso(e.target.value)}}
                                 required
@@ -139,7 +139,7 @@ export default function SimulaProduto() {
                             <input 
                                 type="text"
                                 name="valor"
-                                className="form-control"
+                                className="form-control input-sim-prod"
                                 placeholder="R$"
                                 value={preco}
                                 onChange={(e) => {setPreco(e.target.value)}}
@@ -150,7 +150,7 @@ export default function SimulaProduto() {
                             <input 
                                 type="number" 
                                 name="quantidade" 
-                                className="form-control" 
+                                className="form-control input-sim-prod" 
                                 value={quantidade}
                                 onChange={(e) => {setQuantidade(e.target.valueAsNumber)}}
                             />
@@ -159,7 +159,7 @@ export default function SimulaProduto() {
                         <div className="form-group mb-3">
                             <label htmlFor="exampleFormControlSelect1">Depósito</label>
                             <select 
-                                className="form-control" 
+                                className="form-control input-sim-prod" 
                                 id="exampleFormControlSelect1"
                                 value={deposito}
                                 onChange={(e) => {setDeposito(e.target.value)}}

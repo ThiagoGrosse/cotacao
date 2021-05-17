@@ -11,7 +11,7 @@ class ProductsController
 {
 
     /**
-     * Busca preço produto
+     * Busca dados do produto
      *
      * @param string $idItem
      * @return void
@@ -19,6 +19,7 @@ class ProductsController
 
     public function getItems(string $idItem)
     {
+        // Busca dados do produto no banco de dados
         $pd = Products::where('id_item', '=', $idItem)->first();
 
         return $pd;
@@ -34,14 +35,20 @@ class ProductsController
      */
     public function getAllProducts(Request $request, Response $response): Response
     {
+
+        // Dados informados por parâmetros
         $limit = $request->getQueryParams()['limit'] ?? null;
         $page = $request->getQueryParams()['page'] ?? null;
 
         try {
+
+            // Se os parâmetros forem informados
             if ($limit != null && $page != null) {
+
 
                 $currentPage = ($page - 1) * $limit;
                 $pd = Products::limit($limit)->offset($currentPage)->get();
+
 
                 $response = $response->withHeader('Content-Type', 'application/json')->withStatus(200);
                 $response->getBody()->write(json_encode($pd));

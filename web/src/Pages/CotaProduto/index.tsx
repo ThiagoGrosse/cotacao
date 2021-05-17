@@ -67,14 +67,16 @@ export default function CotaProduto() {
 
         await api.post('/cotacao', body)
             .then((response) => {
-                              
+
                 setResult(response.data)
                 setTable(true)
                 setModal(false)
+
             })
             .catch((error) => {
                 setModal(false)
-                setErroResult('Whoops!' + error.response.data || error)
+                // console.log(error.response.data.Message)
+                setErroResult('Whoops!' + error.response.data.Message || error)
             })
     }
 

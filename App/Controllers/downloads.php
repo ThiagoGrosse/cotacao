@@ -9,7 +9,8 @@ class Downloads
 
 
     /**
-     * Função que atualiza preço dos produtos no banco de dados
+     * Método que busca dados de planilha no sistema E360
+     * e atualiza preço dos produtos no banco de dados
      *
      * @param Request $request
      * @param Response $response
@@ -24,7 +25,7 @@ class Downloads
          * Busca e lê dados da planilha no sistema do E360
          */
 
-        $handle = fopen('http://187.73.184.135:3333/files/preco_venda.csv', 'r');
+        $handle = fopen('http://187.73.187.22:3333/files/preco_venda.csv', 'r');
         while (($data = fgetcsv($handle, 0, ';')) !== FALSE) {
             if ($data[0] != 'id_item') {
                 $getDados[] = [
@@ -115,7 +116,8 @@ class Downloads
 
 
     /**
-     * Função que busca dados de prazo fornecedor dos produtos no E360
+     * Método que busca dados de planilha no sistema E360
+     * e atualiza prazo de fornecedor dos produtos no banco de dados
      *
      * @param Request $request
      * @param Response $response
@@ -130,7 +132,7 @@ class Downloads
         /**
          * Busca e lê dados da planilha no sistema do E360
          */
-        $handle = fopen('http://187.73.184.135:3333/files/item-fornecedor.csv', 'r');
+        $handle = fopen('http://187.73.187.22:3333/files/item-fornecedor.csv', 'r');
         while (($data = fgetcsv($handle, 0, ';')) !== FALSE) {
 
             if ($data[0] != 'id_item' && $data[6] != 'N') {
@@ -206,7 +208,8 @@ class Downloads
 
 
     /**
-     * Função que busca dados da planilha de skus do CORE no E360
+     * Método que busca dados de planilha no sistema E360
+     * e atualiza sku CORE dos produtos no banco de dados
      *
      * @param Request $request
      * @param Response $response

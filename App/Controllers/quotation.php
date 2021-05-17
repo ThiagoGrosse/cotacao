@@ -13,9 +13,7 @@ class Quotation
 {
 
     /**
-     * Monta o json que será enviado ao Fusion
-     * Chama a class que vai fazer a cotação na Fusion
-     * Monta o json que será exibido ao client
+     * Cotação simples
      *
      * @param Request $request
      * @param Response $response
@@ -26,41 +24,63 @@ class Quotation
     public function simpleQuotation(Request $request, Response $response): Response
     {
 
+        // Pega dados informados na requisição
         $data = $request->getParsedBody();
         $cep = $data['cep'];
         $itens = $data['itens'];
         $channel = $data['canal'];
 
+
+        // Cria variáveis do carrinho e do produto
         $cartValue = [];
         $products = [];
 
+
         try {
+
 
             foreach ($itens as $i) {
 
+
+                // ID item e quantidade informado na requisição
                 $idItem = $i['id_item'];
                 $qt = intval($i['quantidade']);
 
+
+                // Busca dados do produto no banco de dados
                 $p = new ProductsController;
                 $getItems = $p->getItems($idItem);
 
-                if (!isset($getItems)) {
+
+                if (!isset($getItems)) { // Retorna mensagem de erro se o produto não for encontrado na base
+
+
+                    $msg = [
+                        "Message" => 'Produto não encontrado na base'
+                    ];
+
 
                     $res = new ResponserController;
-                    $response = $res->responseClient($response, 'Produto não encontrado na base', 404, "Error");
+                    $response = $res->responseClient($response, $msg, 404);
 
                     return $response;
                 }
 
+
+                // Pega preço sku CORE e prazo do produto
                 $price = floatval($getItems['price']);
                 $sku = $getItems['sku_core'];
                 $deadline = $getItems['deadline'];
 
+
+                // Alimenta variável do carrinho
                 $shopCart[] = [
                     'price' => $price,
                     'qt' => $qt
                 ];
 
+
+                // Alimenta variável do produto
                 $products[] = [
                     "cdItem" => $sku,
                     "sku" => $sku,
@@ -69,40 +89,89 @@ class Quotation
                 ];
             }
 
+
+            // função que calcula valor do carrinho
             $cartValue = shopCartCalculator($shopCart);
 
+
+            // Cria variável do resultado da cotação
             $result = [];
 
+
+            // Chama a classe da cotação e do responser
             $qFusion = new Fusion;
             $res = new ResponserController;
 
+
+            // Verifica se foi selecionado a opção de cotação para todos os canais
             if ($channel == 'todos') {
 
+
+                // Pega a lista de canais (array)
                 $channels = channelList();
+
 
                 foreach ($channels as $i) {
 
+
+                    // Faz a cotação na Fusion
                     $quotation = $qFusion->fusion($cep, $i, $products, $cartValue);
 
+
+                    if ($quotation->msg) {
+
+
+                        // Organiza o resultado da cotação
+                        $prepareReturn = $res->returnQuotation($quotation, $deadline);
+                        $response = $res->responseClient($response, $prepareReturn, 400);
+                        return $response;
+                    }
+
+
+                    // Função que organiza o resultado das cotações
                     $prepareReturn = $res->returnQuotation($quotation, $deadline);
+
+
+                    // adiciona informação do canal
                     $prepareReturn['canal'] = $i;
 
+
+                    // Alimenta a variável com resultado final
                     $result[] = $prepareReturn;
                 }
             } else {
 
+
+                // Faz a cotação no Fusion
                 $quotation = $qFusion->fusion($cep, $channel, $products, $cartValue);
 
+
+                if ($quotation->msg) {
+
+
+                    // Organiza o resultado da cotação
+                    $prepareReturn = $res->returnQuotation($quotation, $deadline);
+                    $response = $res->responseClient($response, $prepareReturn, 400);
+                    return $response;
+                }
+
+
+                // Organiza o resultado da cotação
                 $prepareReturn = $res->returnQuotation($quotation, $deadline);
+
+
+                // Adiciona o canal
                 $prepareReturn['canal'] = $channel;
 
+
+                // Alimenta a variável com resultado final
                 $result = [
                     $prepareReturn
                 ];
             }
 
-            $response = $res->responseClient($response, $result, 200);
 
+            $response = $res->responseClient($response, $result, 200);
             return $response;
         } catch (\Exception $e) {
 
@@ -127,81 +196,129 @@ class Quotation
     public function massiveQuotation(Request $request, Response $response): Response
     {
 
+        // Função que remove arquivos antigos da pasta
         removerArquivosAntigos();
 
-        $directory = 'Uploads/';
 
+        // Pega o arquivo enviado pelo front
+        $directory = 'Uploads/';
         $uploadedFiles = $request->getUploadedFiles();
         $uploadedFile = $uploadedFiles['formProdutos'];
 
         if ($uploadedFile->getError() === UPLOAD_ERR_OK) {
-            $filename = moveUploadedFile($directory, $uploadedFile);
 
+
+            // Cria variavel de resultados da cotação
+            $resultQuotation = [];
+
+
+            // Move arquivo da pasta tmp para a pasta uploads
+            $filename = moveUploadedFile($directory, $uploadedFile);
             $uploadfile = $directory . $filename;
 
+
+            // Lê arquivo enviado
             $excel = new Excel($uploadfile);
             $productForQuotation = $excel->readerPlanProducts();
 
-            $resultQuotation = [];
+
+            // Cria variaveis de produtos e carrinho
+            $shopCart = [];
+            $products = [];
+
 
             foreach ($productForQuotation as $i) {
 
+
+                // Pega quantidade e cep
                 $qt = $i['qt'];
                 $cep = $i['cep'];
-                $channel = $i['channel'];
 
+
+                // Busca dados do produto no banco de dados
                 $p = new ProductsController;
                 $getItems = $p->getItems($i['idItem']);
 
-                if (!isset($getItems)) {
 
-                    $res = new ResponserController;
-                    $res->responseClient($response, 'Produto não encontrado na base', 400, "Error");
+                // Se não encontrar o produto no banco, retorna mensagem de erro
+                if (!isset($getItems['sku_core'])) {
+
+
+                    $resultQuotation[] = [
+                        'protocolo' => null,
+                        'cdMicroServico' => null,
+                        'nomeTransportadora' => null,
+                        'prazo' => null,
+                        'prazoTransit' => null,
+                        'prazoExpedicao' => null,
+                        'prazoProdutoBseller' => null,
+                        'valor' => null,
+                        'custo' => null,
+                        'erro' => "Produto não encontrado na base de dados"
+                    ];
+                } else {
+
+
+                    // Pega preço, sku e prazo do produto
+                    $price = floatval($getItems['price']);
+                    $sku = $getItems['sku_core'];
+                    $deadline = $getItems['deadline'];
+
+
+                    // Alimenta variável do carrinho
+                    $shopCart = [
+                        [
+                            'price' => $price,
+                            'qt' => $qt
+                        ]
+                    ];
+
+
+                    // Alimenta variável do produto
+                    $products = [
+                        [
+                            "cdItem" => $sku,
+                            "sku" => $sku,
+                            "qtdItem" => $qt,
+                            "vlrItem" => $price
+                        ]
+                    ];
+
+
+                    // Função que calcula valor do carrinho
+                    $cartValue = shopCartCalculator($shopCart);
+
+
+                    // Faz a cotação no Fusion
+                    $qFusion = new Fusion;
+                    $quotation = $qFusion->fusion($cep, 'Estrela 10', $products, $cartValue);
+
+                    // Alimenta variável com resultado da cotação
+                    $resultQuotation[] = [
+                        'protocolo' => $quotation->protocolo,
+                        'cdMicroServico' => $quotation->modalidades[0]->itens[0]->cdMicroServico ?? null,
+                        'nomeTransportadora' => $quotation->modalidades[0]->transportador ?? null,
+                        'prazo' => $quotation->modalidades[0]->prazo ?? null,
+                        'prazoTransit' => $quotation->modalidades[0]->prazoTransit ?? null,
+                        'prazoExpedicao' => $quotation->modalidades[0]->prazoExpedicao ?? null,
+                        'prazoProdutoBseller' => $deadline ?? null,
+                        'valor' => $quotation->modalidades[0]->valor ?? null,
+                        'custo' => $quotation->modalidades[0]->custo ?? null,
+                        'erro' => $quotation->msg ?? null
+                    ];
                 }
-
-                $price = floatval($getItems['price']);
-                $sku = $getItems['sku_core'];
-                $deadline = $getItems['deadline'];
-
-                $shopCart = [
-                    [
-                        'price' => $price,
-                        'qt' => $qt
-                    ]
-                ];
-
-                $products = [
-                    [
-                        "cdItem" => $sku,
-                        "sku" => $sku,
-                        "qtdItem" => $qt,
-                        "vlrItem" => $price
-                    ]
-                ];
-
-                $cartValue = shopCartCalculator($shopCart);
-
-                $qFusion = new Fusion;
-                $quotation = $qFusion->fusion($cep, $channel, $products, $cartValue);
-
-                $resultQuotation[] = [
-                    'protocolo' => $quotation->protocolo,
-                    'cdMicroServico' => $quotation->modalidades[0]->itens[0]->cdMicroServico ?? null,
-                    'nomeTransportadora' => $quotation->modalidades[0]->transportador ?? null,
-                    'prazo' => $quotation->modalidades[0]->prazo ?? null,
-                    'prazoTransit' => $quotation->modalidades[0]->prazoTransit ?? null,
-                    'prazoExpedicao' => $quotation->modalidades[0]->prazoExpedicao ?? null,
-                    'prazoProdutoBseller' => $deadline ?? null,
-                    'valor' => $quotation->modalidades[0]->valor ?? null,
-                    'custo' => $quotation->modalidades[0]->custo ?? null,
-                    'erro' => $quotation->msg ?? null
-                ];
             }
 
+
+            // Grava resultado das cotaçãoes no arquivo
             $excel->writePlanProducts($uploadfile, $resultQuotation);
 
+
+            // Pega nome do arquivo
             $file = explode('/', $uploadfile);
 
+
+            // Retorna mensagem pro front/usuário
             $res = new ResponserController;
             $response = $res->responseClient($response, $file[1], 200);
         }
@@ -220,12 +337,18 @@ class Quotation
 
     public function simulateProduct(Request $request, Response $response): Response
     {
+
+        // Pega dados informados na request
         $data = $request->getParsedBody();
 
+
+        // Cria variavel
         $res = null;
 
         try {
 
+
+            // Pega as informações, caso não informadas retorna mensagem de erro
             $cep = $data['cep'] ?? $res = validateInformation($response, 'cep');
             $channel = $data['canal'] ?? $res = validateInformation($response, 'canal');
             $warehouse = $data['deposito'] ?? $res = validateInformation($response, 'deposito');
@@ -237,11 +360,14 @@ class Quotation
             $qt = $data['quantidade'] ?? 1;
             $deadline = 0;
 
-            if (!is_null($res)) {
 
+            if (!is_null($res)) {
                 return $response->withHeader('Content-Type', 'application/json');
             }
 
+
+            // Identifica o depósito selecionado
+            // para determinar o sku que será utilizado na cotação
             if ($warehouse == 'sp') {
 
                 $sku = 'item-teste-sp';
@@ -253,6 +379,8 @@ class Quotation
                 $sku = 'item-teste';
             }
 
+
+            // Alimenta variável do carrinho
             $shopCart = [
                 [
                     'price' => floatval($price),
@@ -260,6 +388,8 @@ class Quotation
                 ]
             ];
 
+
+            // Alimenta variável do produto
             $products[] = [
                 "cdItem" => $sku,
                 "sku" => $sku,
@@ -271,16 +401,26 @@ class Quotation
                 "peso" => $weight
             ];
 
-            $cartValue = shopCartCalculator($shopCart); // === função que calcula valor do carrinho
 
+            // função que calcula valor do carrinho
+            $cartValue = shopCartCalculator($shopCart);
+
+
+            // Cria variável do resultado da cotação
             $result = [];
 
+
+            // Faz a cotação
             $qFusion = new Fusion;
             $quotation = $qFusion->fusion($cep, $channel, $products, $cartValue);
 
+
+            // Trata o resultado da cotação
             $responseTreatment = new ResponserController;
             $res = $responseTreatment->returnQuotation($quotation, $deadline);
 
+
+            // Alimenta a variável
             $result[] = $res;
 
             $response = $responseTreatment->responseClient($response, $result, 200);

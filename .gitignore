@@ -1,4 +1,4 @@
 vendor/
 Config/env.php/
-node_modules/
+web/node_modules/
 Uploads/

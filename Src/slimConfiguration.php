@@ -1,6 +1,6 @@
 <?php
 
-namespace src;
+namespace Src;
 
 function slimConfiguration(): \Slim\Container
 {

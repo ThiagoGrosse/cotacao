@@ -56,7 +56,8 @@ class ResponserController
     public function returnQuotation($quotation, int $deadline)
     {
 
-        if (is_null($quotation->modalidades)) {
+        if (empty($quotation->modalidades) && !empty($quotation->msg)) {
+
 
             $result = [
                 'Message' => $quotation->msg,
@@ -64,7 +65,17 @@ class ResponserController
             ];
 
             return $result;
+        } elseif (empty($quotation->modalidades) && empty($quotation->msg)) {
+
+
+            $result = [
+                'Message' => "Erro ao cotar frete, verifique o protocolo",
+                'Protocolo' => $quotation->protocolo
+            ];
+
+            return $result;
         }
+
 
         $valor = number_format($quotation->modalidades[0]->valor, 2);
         $custo = number_format($quotation->modalidades[0]->custo, 2);

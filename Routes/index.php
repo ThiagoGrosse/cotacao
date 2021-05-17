@@ -7,9 +7,6 @@ use App\Controllers\Quotation;
 use App\Controllers\ShippingCompanyController;
 use App\Middlewares\AuthConnection;
 
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
-
 use function src\slimConfiguration;
 
 $app = new \Slim\App(slimConfiguration());
@@ -39,6 +36,7 @@ $app->group('/api/v1', function () use ($app) {
     /**
      * PRODUTOS
      */
+
     //Busca todos os produtos
     $app->get('/produtos', ProductsController::class . ':getAllProducts');
 
@@ -66,20 +64,5 @@ $app->group('/api/v1/massivo', function () use ($app) {
     // Cotação Massiva
     $app->post('/cotacaoMassiva', Quotation::class . ':massiveQuotation');
 });
-
-
-/**
- * DOWNLOADS
- */
-
-// Atualiza Preço
-$app->get('/precoDownload', Downloads::class . ':downloadPrice');
-
-// Atualiza Prazo
-$app->get('/prazoDownload', Downloads::class . ':downloadDeadline');
-
-// Atualiza SKU
-$app->get('/skuDownload', Downloads::class . ':downloadSku');
-
 
 $app->run();
